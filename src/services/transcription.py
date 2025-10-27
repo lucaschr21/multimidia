@@ -1,10 +1,12 @@
-import whisper
+import logging
 import os
-import torch
-from typing import Dict, Any
+import threading
+from typing import Any, Dict
 
-# Importa as configurações do nosso arquivo de ambiente
-from src.env import TRANSCRIPTION_MODEL
+import torch
+import whisper
+
+from src import env
 
 
 class TranscriptionService:
@@ -13,9 +15,8 @@ class TranscriptionService:
         Construtor da classe.
         É executado quando 'load_transcription_service()' é chamado.
         """
-
-        self.model_type = TRANSCRIPTION_MODEL
-        print(
+        self.model_type = env.TRANSCRIPTION_MODEL
+        logging.info(
             f"Iniciando TranscriptionService (carregando modelo '{self.model_type}')..."
         )
 
@@ -33,25 +34,27 @@ class TranscriptionService:
             if torch.cuda.is_available():
                 self.device = "cuda"
                 self.use_fp16 = True
-                print(
+                logging.info(
                     f"GPU (ROCm/CUDA) detectada! Carregando modelo '{self.model_type}' no dispositivo: {self.device}"
                 )
             else:
                 self.device = "cpu"
                 self.use_fp16 = False
-                print(
+                logging.info(
                     f"GPU não detectada. Carregando modelo '{self.model_type}' no dispositivo: {self.device}"
                 )
         except Exception as e:
-            print(f"Erro ao verificar PyTorch/GPU: {e}. Forçando CPU.")
+            logging.warning(f"Erro ao verificar PyTorch/GPU: {e}. Forçando CPU.")
             self.device = "cpu"
             self.use_fp16 = False
 
         try:
             self.model = whisper.load_model(self.model_type, device=self.device)
-            print(f"Modelo Whisper '{self.model_type}' carregado com sucesso.")
+            logging.info(f"Modelo Whisper '{self.model_type}' carregado com sucesso.")
         except Exception as e:
-            print(f"Erro fatal ao carregar o modelo Whisper: {e}")
+            logging.error(
+                f"Erro fatal ao carregar o modelo Whisper: {e}", exc_info=True
+            )
             raise RuntimeError(
                 f"Não foi possível carregar o modelo Whisper '{self.model_type}'."
             ) from e
@@ -68,27 +71,35 @@ class TranscriptionService:
                 f"Arquivo não encontrado no serviço: {video_file_path}"
             )
 
-        print(f"Iniciando transcrição para: {video_file_path}...")
+        logging.info(f"Iniciando transcrição para: {video_file_path}...")
 
         try:
             result = self.model.transcribe(video_file_path, fp16=self.use_fp16)
-
-            print("Transcrição concluída.")
+            logging.info("Transcrição concluída.")
             return result
-
         except Exception as e:
-            print(f"Erro durante a execução da transcrição: {e}")
+            logging.error(f"Erro durante a execução da transcrição: {e}", exc_info=True)
             raise e
 
 
 transcriptionService: TranscriptionService | None = None
 
+_transcription_lock = threading.Lock()
+
 
 def load_transcription_service():
     """
-    Função chamada pelo 'lifespan' do FastAPI para criar e carregar
-    a instância do serviço.
+    Função chamada pela rota (via Injeção de Dependência) para carregar
+    o serviço na primeira requisição.
+
+    Usa um Lock para garantir que o modelo seja carregado apenas uma vez,
+    mesmo sob requisições concorrentes.
     """
     global transcriptionService
+
     if transcriptionService is None:
-        transcriptionService = TranscriptionService()
+        with _transcription_lock:
+            if transcriptionService is None:
+                transcriptionService = TranscriptionService()
+
+    return transcriptionService

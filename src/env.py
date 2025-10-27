@@ -1,14 +1,18 @@
+import logging
 import os
-from dotenv import load_dotenv
 from typing import List
+
+from dotenv import load_dotenv
 
 DOTENV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 
 if os.path.exists(DOTENV_PATH):
-    print(f"Carregando variáveis de ambiente de: {DOTENV_PATH}")
+    logging.info(f"Carregando variáveis de ambiente de: {DOTENV_PATH}")
     load_dotenv(dotenv_path=DOTENV_PATH)
 else:
-    print("Arquivo .env não encontrado. Usando valores padrão e variáveis de ambiente.")
+    logging.warning(
+        "Arquivo .env não encontrado. Usando valores padrão e variáveis de ambiente."
+    )
 
 SERVER_HOST: str = os.environ.get("SERVER_HOST", "127.0.0.1")
 SERVER_PORT: int = int(os.environ.get("SERVER_PORT", 8000))

@@ -1,73 +1,102 @@
-from typing import List, Dict, Any
+import logging
+import threading
+from typing import Any, Dict, List
 
-# Importa as *instâncias globais* (que serão 'None' até o lifespan rodar)
-# e as *classes* (para type hinting) dos serviços "trabalhadores"
-from src.services.transcription import transcriptionService, TranscriptionService
-from src.services.diarization import diarizationService, DiarizationService
-from src.services.rendering import renderingService, RenderingService
-
-# --- Classe SubtitleService ---
+from src.models.subtitle import SubtitleSegment
+from src.services.diarization import DiarizationService, load_diarization_service
+from src.services.rendering import RenderingService, load_rendering_service
+from src.services.transcription import TranscriptionService, load_transcription_service
 
 
 class SubtitleService:
-    def __init__(
-        self,
-        transcription_service: TranscriptionService,
-        diarization_service: DiarizationService,
-        rendering_service: RenderingService,
-    ):
-        """
-        Construtor. Recebe os 3 serviços "trabalhadores" dos quais depende.
-        """
-        print("Iniciando SubtitleService (orquestrador)...")
-        self.transcription_service = transcription_service
-        self.diarization_service = diarization_service
-        self.rendering_service = rendering_service
+    """
+    Serviço orquestrador com carregamento preguiçoso granular.
+    """
 
-    # --- Método 1: Geração de JSON ---
+    def __init__(self):
+        """
+        Construtor. Inicializa os serviços dependentes como None.
+        Eles serão carregados sob demanda pelos métodos.
+        """
+        logging.info(
+            "Iniciando SubtitleService (orquestrador) - Instância criada, dependências ainda não carregadas."
+        )
+        self._transcription_service: TranscriptionService | None = None
+        self._diarization_service: DiarizationService | None = None
+        self._rendering_service: RenderingService | None = None
+        self._transcription_lock = threading.Lock()
+        self._diarization_lock = threading.Lock()
+        self._rendering_lock = threading.Lock()
+
+    @property
+    def transcription_service(self) -> TranscriptionService:
+        """Carrega o TranscriptionService sob demanda."""
+        if self._transcription_service is None:
+            with self._transcription_lock:
+                if self._transcription_service is None:
+                    logging.info(
+                        "SubtitleService: Carregando TranscriptionService sob demanda..."
+                    )
+                    self._transcription_service = load_transcription_service()
+        return self._transcription_service
+
+    @property
+    def diarization_service(self) -> DiarizationService:
+        """Carrega o DiarizationService sob demanda."""
+        if self._diarization_service is None:
+            with self._diarization_lock:
+                if self._diarization_service is None:
+                    logging.info(
+                        "SubtitleService: Carregando DiarizationService sob demanda..."
+                    )
+                    self._diarization_service = load_diarization_service()
+        return self._diarization_service
+
+    @property
+    def rendering_service(self) -> RenderingService:
+        """Carrega o RenderingService sob demanda."""
+        if self._rendering_service is None:
+            with self._rendering_lock:
+                if self._rendering_service is None:
+                    logging.info(
+                        "SubtitleService: Carregando RenderingService sob demanda..."
+                    )
+                    self._rendering_service = load_rendering_service()
+        return self._rendering_service
 
     def generate_subtitle_data(self, video_file_path: str) -> List[Dict[str, Any]]:
         """
-        Orquestra a transcrição e diarização para gerar o JSON de legendas.
+        Orquestra a transcrição e diarização.
+        Carrega os serviços necessários se ainda não estiverem carregados.
         """
-
-        # Passo 1: Transcrição (Whisper)
-        print("SubtitleService: Solicitando transcrição...")
-        # Chama o método da instância injetada
+        logging.info("SubtitleService: Solicitando transcrição...")
         transcription_result = self.transcription_service.transcribe_video(
             video_file_path
         )
         whisper_segments = transcription_result.get("segments", [])
 
         if not whisper_segments:
-            print("SubtitleService: Transcrição não retornou segmentos.")
+            logging.warning("SubtitleService: Transcrição não retornou segmentos.")
             return []
 
-        # Passo 2: Diarização (Pyannote)
-        print("SubtitleService: Solicitando diarização...")
+        logging.info("SubtitleService: Solicitando diarização...")
         diarization_segments = self.diarization_service.diarize_video(video_file_path)
 
         if not diarization_segments:
-            print("SubtitleService: Diarização não retornou segmentos.")
-            # Se a diarização falhar, retorna a transcrição sem interlocutor
+            logging.warning("SubtitleService: Diarização não retornou segmentos.")
             for seg in whisper_segments:
                 seg["speaker"] = "UNKNOWN"
             return whisper_segments
 
-        # Passo 3: Fusão dos Resultados
-        print("SubtitleService: Fundindo resultados...")
-
+        logging.info("SubtitleService: Fundindo resultados...")
         final_subtitles = []
         for segment in whisper_segments:
             segment_start = segment["start"]
             segment_end = segment["end"]
             segment_text = segment["text"]
-
-            # Encontra o interlocutor dominante para este segmento de texto
             speaker = self._find_dominant_speaker(
                 segment_start, segment_end, diarization_segments
             )
-
             final_subtitles.append(
                 {
                     "start": round(segment_start, 3),
@@ -77,7 +106,7 @@ class SubtitleService:
                 }
             )
 
-        print("SubtitleService: Geração de JSON concluída.")
+        logging.info("SubtitleService: Geração de JSON concluída.")
         return final_subtitles
 
     def _find_dominant_speaker(
@@ -94,77 +123,58 @@ class SubtitleService:
             turn_start = turn["start"]
             turn_end = turn["end"]
             speaker = turn["speaker"]
-
-            # Calcula a sobreposição (intersecção) entre o segmento de texto e o de fala
             overlap_start = max(segment_start, turn_start)
             overlap_end = min(segment_end, turn_end)
             overlap_duration = overlap_end - overlap_start
-
             if overlap_duration > 0:
                 speaker_overlap[speaker] = (
                     speaker_overlap.get(speaker, 0) + overlap_duration
                 )
-
-        # Se não houver sobreposição, retorna "Desconhecido"
         if not speaker_overlap:
             return "UNKNOWN"
-
-        # Retorna o interlocutor com o maior tempo de fala no segmento
         return max(speaker_overlap, key=speaker_overlap.get)
-
-    # --- Método 2: Geração de Vídeo ---
 
     def render_final_video(
         self,
         original_video_path: str,
         output_video_path: str,
-        subtitles_data: List[Dict[str, Any]],
+        subtitles_data: List[SubtitleSegment],
         style_options: Dict[str, Any],
     ):
         """
-        Orquestra a renderização do vídeo final delegando ao RenderingService.
+        Orquestra a renderização do vídeo final.
+        Carrega o RenderingService se ainda não estiver carregado.
         """
-
-        print("SubtitleService: Solicitando renderização de vídeo...")
+        logging.info("SubtitleService: Solicitando renderização de vídeo...")
 
         try:
-            # Apenas delega o trabalho para o serviço especialista
             self.rendering_service.render_video_with_subtitles(
                 original_video_path=original_video_path,
                 output_video_path=output_video_path,
                 subtitles_data=subtitles_data,
                 style_options=style_options,
             )
-            print("SubtitleService: Renderização de vídeo concluída.")
+            logging.info("SubtitleService: Renderização de vídeo concluída.")
         except Exception as e:
-            print(f"SubtitleService: Falha na renderização - {e}")
+            logging.error(
+                f"SubtitleService: Falha na renderização - {e}", exc_info=True
+            )
             raise e
 
 
-# --- Gerenciamento da Instância (para 'lifespan') ---
-
-# A instância global começa como 'None'.
 subtitleService: SubtitleService | None = None
+_subtitle_lock = threading.Lock()
 
 
 def load_subtitle_service():
     """
-    Função chamada pelo 'lifespan' (depois dos outros serviços)
-    para criar a instância do serviço "gerente".
+    Função chamada pela rota. Agora ela APENAS cria a instância
+    do SubtitleService (se não existir). O carregamento real
+    dos modelos de IA é delegado para os métodos do serviço.
     """
     global subtitleService
     if subtitleService is None:
-        if (
-            transcriptionService is None
-            or diarizationService is None
-            or renderingService is None
-        ):
-            raise RuntimeError(
-                "Serviços 'trabalhadores' não foram carregados antes do 'SubtitleService'."
-            )
-
-        subtitleService = SubtitleService(
-            transcription_service=transcriptionService,
-            diarization_service=diarizationService,
-            rendering_service=renderingService,
-        )
+        with _subtitle_lock:
+            if subtitleService is None:
+                subtitleService = SubtitleService()
+    return subtitleService

@@ -1,10 +1,13 @@
+import logging
 import os
+import threading
+from typing import Any, Dict, List
+
 import torch
 import whisper
 from pyannote.audio import Pipeline
-from typing import List, Dict, Any
 
-from src.env import DIARIZATION_MODEL, TARGET_SAMPLE_RATE, HF_TOKEN
+from src import env
 
 
 class DiarizationService:
@@ -13,12 +16,13 @@ class DiarizationService:
         Construtor da classe.
         É executado quando 'load_diarization_service()' é chamado.
         """
+        self.model_id = env.DIARIZATION_MODEL
+        self.sample_rate = env.TARGET_SAMPLE_RATE
+        self.hf_token = env.HF_TOKEN
 
-        self.model_id = DIARIZATION_MODEL
-        self.sample_rate = TARGET_SAMPLE_RATE
-        self.hf_token = HF_TOKEN
-
-        print(f"Iniciando DiarizationService (carregando modelo '{self.model_id}')...")
+        logging.info(
+            f"Iniciando DiarizationService (carregando modelo '{self.model_id}')..."
+        )
 
         self.device = None
         self.pipeline = None
@@ -32,28 +36,30 @@ class DiarizationService:
         try:
             if torch.cuda.is_available():
                 self.device = torch.device("cuda")
-                print(
+                logging.info(
                     f"GPU (ROCm/CUDA) detectada! Carregando modelo Pyannote '{self.model_id}' na GPU."
                 )
             else:
                 self.device = torch.device("cpu")
-                print(
+                logging.info(
                     f"GPU não detectada. Carregando modelo Pyannote '{self.model_id}' na CPU."
                 )
         except Exception as e:
-            print(f"Erro ao verificar PyTorch/GPU: {e}. Forçando CPU.")
+            logging.warning(f"Erro ao verificar PyTorch/GPU: {e}. Forçando CPU.")
             self.device = torch.device("cpu")
 
         try:
             self.pipeline = Pipeline.from_pretrained(self.model_id, token=self.hf_token)
 
             self.pipeline.to(self.device)
-            print(
+            logging.info(
                 f"Modelo Pyannote '{self.model_id}' carregado com sucesso no dispositivo: {self.device}."
             )
 
         except Exception as e:
-            print(f"Erro fatal ao carregar o modelo Pyannote: {e}")
+            logging.error(
+                f"Erro fatal ao carregar o modelo Pyannote: {e}", exc_info=True
+            )
             raise RuntimeError(
                 f"Não foi possível carregar o modelo Pyannote '{self.model_id}'."
             ) from e
@@ -61,7 +67,6 @@ class DiarizationService:
     def diarize_video(self, video_file_path: str) -> List[Dict[str, Any]]:
         """
         Método público para processar um arquivo e retornar os segmentos de fala.
-        Usa o método de pré-carregamento de áudio para evitar erros.
         """
         if self.pipeline is None:
             raise RuntimeError("Modelo Pyannote não foi carregado corretamente.")
@@ -71,10 +76,12 @@ class DiarizationService:
                 f"Arquivo não encontrado no serviço: {video_file_path}"
             )
 
-        print(f"Iniciando diarização para: {video_file_path}...")
+        logging.info(f"Iniciando diarização para: {video_file_path}...")
 
         try:
-            print(f"Pré-carregando e reamostrando áudio para {self.sample_rate}Hz...")
+            logging.info(
+                f"Pré-carregando e reamostrando áudio para {self.sample_rate}Hz..."
+            )
 
             waveform_numpy = whisper.load_audio(video_file_path, sr=self.sample_rate)
             waveform_tensor = torch.from_numpy(waveform_numpy)
@@ -82,7 +89,7 @@ class DiarizationService:
 
             audio_data = {"waveform": waveform_tensor, "sample_rate": self.sample_rate}
 
-            print("Áudio pré-carregado. Executando pipeline Pyannote...")
+            logging.info("Áudio pré-carregado. Executando pipeline Pyannote...")
 
             diarization_result = self.pipeline(audio_data)
 
@@ -96,22 +103,31 @@ class DiarizationService:
                     }
                 )
 
-            print("Diarização concluída.")
+            logging.info("Diarização concluída.")
             return segments
 
         except Exception as e:
-            print(f"Erro durante a execução da diarização: {e}")
+            logging.error(f"Erro durante a execução da diarização: {e}", exc_info=True)
             raise e
 
 
 diarizationService: DiarizationService | None = None
 
+_diarization_lock = threading.Lock()
+
 
 def load_diarization_service():
     """
-    Função chamada pelo 'lifespan' do FastAPI para criar e carregar
-    a instância do serviço.
+    Função chamada pela rota (via Injeção de Dependência) para carregar
+    o serviço na primeira requisição.
+
+    Usa um Lock para garantir que o modelo seja carregado apenas uma vez.
     """
     global diarizationService
+
     if diarizationService is None:
-        diarizationService = DiarizationService()
+        with _diarization_lock:
+            if diarizationService is None:
+                diarizationService = DiarizationService()
+
+    return diarizationService
