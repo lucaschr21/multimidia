@@ -5,12 +5,16 @@ from typing import Any, Dict, List
 from src.models.subtitle import SubtitleSegment
 from src.services.diarization import DiarizationService, load_diarization_service
 from src.services.rendering import RenderingService, load_rendering_service
+
 from src.services.transcription import TranscriptionService, load_transcription_service
+
+logger = logging.getLogger(__name__)
 
 
 class SubtitleService:
     """
-    Serviço orquestrador com carregamento preguiçoso granular.
+    Serviço orquestrador que coordena os serviços de transcrição,
+    diarização e renderização.
     """
 
     def __init__(self):
@@ -18,8 +22,8 @@ class SubtitleService:
         Construtor. Inicializa os serviços dependentes como None.
         Eles serão carregados sob demanda pelos métodos.
         """
-        logging.info(
-            "Iniciando SubtitleService (orquestrador) - Instância criada, dependências ainda não carregadas."
+        logger.info(
+            "Instância de SubtitleService criada (dependências não carregadas)."
         )
         self._transcription_service: TranscriptionService | None = None
         self._diarization_service: DiarizationService | None = None
@@ -34,7 +38,7 @@ class SubtitleService:
         if self._transcription_service is None:
             with self._transcription_lock:
                 if self._transcription_service is None:
-                    logging.info(
+                    logger.info(
                         "SubtitleService: Carregando TranscriptionService sob demanda..."
                     )
                     self._transcription_service = load_transcription_service()
@@ -46,7 +50,7 @@ class SubtitleService:
         if self._diarization_service is None:
             with self._diarization_lock:
                 if self._diarization_service is None:
-                    logging.info(
+                    logger.info(
                         "SubtitleService: Carregando DiarizationService sob demanda..."
                     )
                     self._diarization_service = load_diarization_service()
@@ -58,7 +62,7 @@ class SubtitleService:
         if self._rendering_service is None:
             with self._rendering_lock:
                 if self._rendering_service is None:
-                    logging.info(
+                    logger.info(
                         "SubtitleService: Carregando RenderingService sob demanda..."
                     )
                     self._rendering_service = load_rendering_service()
@@ -66,47 +70,78 @@ class SubtitleService:
 
     def generate_subtitle_data(self, video_file_path: str) -> List[Dict[str, Any]]:
         """
-        Orquestra a transcrição e diarização.
-        Carrega os serviços necessários se ainda não estiverem carregados.
+        Orquestra a transcrição e diarização, funda os resultados
+        e mapeia os IDs de speaker para "Interlocutor X".
         """
-        logging.info("SubtitleService: Solicitando transcrição...")
+
+        logger.info("SubtitleService: Solicitando transcrição...")
         transcription_result = self.transcription_service.transcribe_video(
             video_file_path
         )
         whisper_segments = transcription_result.get("segments", [])
-
         if not whisper_segments:
-            logging.warning("SubtitleService: Transcrição não retornou segmentos.")
+            logger.warning("SubtitleService: Transcrição não retornou segmentos.")
             return []
 
-        logging.info("SubtitleService: Solicitando diarização...")
+        logger.info("SubtitleService: Solicitando diarização...")
         diarization_segments = self.diarization_service.diarize_video(video_file_path)
 
         if not diarization_segments:
-            logging.warning("SubtitleService: Diarização não retornou segmentos.")
-            for seg in whisper_segments:
-                seg["speaker"] = "UNKNOWN"
-            return whisper_segments
-
-        logging.info("SubtitleService: Fundindo resultados...")
-        final_subtitles = []
-        for segment in whisper_segments:
-            segment_start = segment["start"]
-            segment_end = segment["end"]
-            segment_text = segment["text"]
-            speaker = self._find_dominant_speaker(
-                segment_start, segment_end, diarization_segments
+            logger.warning(
+                "SubtitleService: Diarização não retornou segmentos. Marcando todos como 'Desconhecido'."
             )
-            final_subtitles.append(
+            return [
                 {
-                    "start": round(segment_start, 3),
-                    "end": round(segment_end, 3),
-                    "text": segment_text.strip(),
-                    "speaker": speaker,
+                    "start": round(seg["start"], 3),
+                    "end": round(seg["end"], 3),
+                    "text": seg.get("text", "").strip(),
+                    "speaker": "Desconhecido",
+                }
+                for seg in whisper_segments
+            ]
+
+        logger.info("SubtitleService: Fundindo resultados...")
+        intermediate_subtitles = []
+        for segment in whisper_segments:
+            speaker_id = self._find_dominant_speaker(
+                segment["start"], segment["end"], diarization_segments
+            )
+            intermediate_subtitles.append(
+                {
+                    "start": round(segment["start"], 3),
+                    "end": round(segment["end"], 3),
+                    "text": segment.get("text", "").strip(),
+                    "speaker": speaker_id,
                 }
             )
 
-        logging.info("SubtitleService: Geração de JSON concluída.")
+        logger.info("SubtitleService: Mapeando IDs de speaker para 'Interlocutor X'...")
+        speaker_map: Dict[str, str] = {}
+        interlocutor_count = 1
+        final_subtitles = []
+
+        for segment in intermediate_subtitles:
+            original_speaker_id = segment["speaker"]
+
+            if original_speaker_id == "UNKNOWN":
+                mapped_speaker_name = "Desconhecido"
+            elif original_speaker_id in speaker_map:
+                mapped_speaker_name = speaker_map[original_speaker_id]
+            else:
+                mapped_speaker_name = f"Interlocutor {interlocutor_count}"
+                speaker_map[original_speaker_id] = mapped_speaker_name
+                interlocutor_count += 1
+
+            final_subtitles.append(
+                {
+                    "start": segment["start"],
+                    "end": segment["end"],
+                    "text": segment["text"],
+                    "speaker": mapped_speaker_name,
+                }
+            )
+
+        logger.info("SubtitleService: Geração de dados (com mapeamento) concluída.")
         return final_subtitles
 
     def _find_dominant_speaker(
@@ -117,22 +152,25 @@ class SubtitleService:
     ) -> str:
         """
         Função auxiliar para encontrar o interlocutor dominante em um segmento de texto.
+        Retorna 'UNKNOWN' se não houver overlap.
         """
         speaker_overlap = {}
+        max_overlap = 0
+        dominant_speaker = "UNKNOWN"
         for turn in diarization_result:
             turn_start = turn["start"]
             turn_end = turn["end"]
             speaker = turn["speaker"]
-            overlap_start = max(segment_start, turn_start)
-            overlap_end = min(segment_end, turn_end)
-            overlap_duration = overlap_end - overlap_start
-            if overlap_duration > 0:
-                speaker_overlap[speaker] = (
-                    speaker_overlap.get(speaker, 0) + overlap_duration
-                )
-        if not speaker_overlap:
-            return "UNKNOWN"
-        return max(speaker_overlap, key=speaker_overlap.get)
+            overlap = max(
+                0, min(segment_end, turn_end) - max(segment_start, turn_start)
+            )
+            if overlap > 0:
+                current_total = speaker_overlap.get(speaker, 0) + overlap
+                speaker_overlap[speaker] = current_total
+                if current_total > max_overlap:
+                    max_overlap = current_total
+                    dominant_speaker = speaker
+        return dominant_speaker
 
     def render_final_video(
         self,
@@ -145,8 +183,7 @@ class SubtitleService:
         Orquestra a renderização do vídeo final.
         Carrega o RenderingService se ainda não estiver carregado.
         """
-        logging.info("SubtitleService: Solicitando renderização de vídeo...")
-
+        logger.info("SubtitleService: Solicitando renderização de vídeo...")
         try:
             self.rendering_service.render_video_with_subtitles(
                 original_video_path=original_video_path,
@@ -154,11 +191,9 @@ class SubtitleService:
                 subtitles_data=subtitles_data,
                 style_options=style_options,
             )
-            logging.info("SubtitleService: Renderização de vídeo concluída.")
+            logger.info("SubtitleService: Renderização de vídeo concluída.")
         except Exception as e:
-            logging.error(
-                f"SubtitleService: Falha na renderização - {e}", exc_info=True
-            )
+            logger.error("SubtitleService: Falha na renderização", exc_info=True)
             raise e
 
 

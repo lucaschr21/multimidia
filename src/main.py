@@ -29,7 +29,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(subtitle.router, prefix="/api/v1/subtitles", tags=["Subtitles"])
+app.include_router(subtitle.router, prefix="/api/subtitles", tags=["Subtitles"])
 
 
 @app.get("/")
