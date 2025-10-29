@@ -1,0 +1,145 @@
+.feature-card {
+  flex-basis: 43%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background-color: var(--header-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.icon-wrapper {
+  font-size: 2.5rem;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.icon-legendagem {
+  background-color: #e6f3ff;
+  color: #007bff;
+}
+
+.icon-narracao {
+  background-color: #f4eefc;
+  color: #8a4fff;
+}
+
+.feature-card h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-color);
+}
+
+.feature-description {
+  color: #888;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+.layout-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+  min-width: 300px;
+  max-width: 500px;
+}
+
+.card {
+  background-color: var(--header-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.card-small {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 110px;
+}
+
+.card-small-icon {
+  font-size: 2.2rem;
+  flex-shrink: 0;
+}
+
+.card-small h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+  color: var(--text-color);
+}
+
+.card-small p {
+  margin: 0;
+}
+
+.card-large {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 300px;
+}
+
+.card-large-icon {
+  font-size: 3rem;
+  color: #888;
+  margin-bottom: 1rem;
+}
+
+.card-upload {
+  border: 2px dashed #a0a0a0;
+  background-color: transparent;
+}
+
+.text-muted {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.text-footer-column {
+  font-size: 0.9rem;
+  color: #aaa;
+  text-align: center;
+  margin-top: -0.5rem;
+}
+
+.button-primary {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 1rem 0;
+  transition: background-color 0.2s;
+}
+
+.button-primary:hover {
+  background-color: #0056b3;
+}
+
+.icon-purple {
+  color: #8a4fff;
+}
+
+.card-upload.dragging {
+  border: 2px dashed #007bff;
+  background-color: rgba(0, 123, 255, 0.05);
+  transform: scale(1.02);
+  transition: transform 0.2s ease-in-out, background-color 0.2s;
+}

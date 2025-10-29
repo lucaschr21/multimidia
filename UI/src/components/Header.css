@@ -1,0 +1,27 @@
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--header-bg);
+  color: var(--header-text);
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.logo {
+  padding: 1.5rem 2rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.theme-toggle-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: var(--button-bg);
+  color: var(--button-text);
+  transition: background-color 0.3s, color 0.3s;
+  margin-right: 2%;
+}
