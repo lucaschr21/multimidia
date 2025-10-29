@@ -1,4 +1,3 @@
-import React from "react";
 import { FaRegUserCircle } from "react-icons/fa";
 import { TbMovie } from "react-icons/tb";
 

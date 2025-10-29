@@ -1,17 +1,15 @@
-import Cabecalho from "./componentes/Cabecalho";
-import "./index.css";
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+
+import PaginaPrincipal from "./paginas/PaginaPrincipal";
+import PaginaNarracao from "./paginas/PaginaNarracao";
 
 function App() {
   return (
-    <div className="App bg-light" style={{ minHeight: "100vh" }}>
-      <Cabecalho />
-
-      <main className="container py-5">
-        <div className="row justify-content-center">
-          <div className="col-md-8">{/* <SecaoAudio /> */}</div>
-        </div>
-      </main>
-    </div>
+    <Routes>
+      <Route path="/" element={<PaginaPrincipal />} />
+      <Route path="/narracao" element={<PaginaNarracao />} />
+    </Routes>
   );
 }
 
