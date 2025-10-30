@@ -24,10 +24,6 @@ export interface SubtitleStyle {
 }
 // ------------------------------------------
 
-// --- Dados de Exemplo (Não são mais usados) ---
-// const MOCK_SUBTITLES: Subtitle[] = [ ... ];
-// ------------------------------------------
-
 interface VideoEditorProps {
   file: File;
   onGoBack: () => void;
@@ -64,17 +60,38 @@ function VideoEditor({ file, onGoBack }: VideoEditorProps) {
 
       try {
         // Assumindo que seu backend roda em /api/v1/subtitles/generate
-        const response = await fetch('/api/v1/subtitles/generate', {
+        const response = await fetch('/api/subtitles/generate', {
           method: 'POST',
           body: formData,
         });
 
+        // --- INÍCIO DA CORREÇÃO ---
         if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.detail || `Falha ao gerar legendas: ${response.statusText}`);
-        }
+          // A resposta NÃO foi 200 (ex: 400, 404, 500)
+          // Vamos tentar ler a resposta como texto primeiro, é mais seguro.
+          const errorText = await response.text();
+          let errorMessage = errorText;
 
-        // Resposta do backend: { start, end, text, speaker }
+          // Tenta analisar o texto como JSON, mas sem quebrar se não for.
+          try {
+            const errData = JSON.parse(errorText);
+            errorMessage = errData.detail || errData.message || errorText;
+          } catch (e) {
+            // Falhou em analisar o JSON, então era só texto.
+            // A variável 'errorMessage' já contém o 'errorText'.
+          }
+          
+          // Se a mensagem ainda estiver vazia, use o statusText
+          if (!errorMessage) {
+            errorMessage = `Falha ao gerar legendas: ${response.statusText}`;
+          }
+
+          throw new Error(errorMessage);
+        }
+        // --- FIM DA CORREÇÃO ---
+
+        // Se chegamos aqui, a resposta FOI 200 (OK).
+        // Aqui, esperamos que a resposta seja JSON.
         const data = await response.json();
 
         // Mapeia a resposta da API para a interface do Front-end
