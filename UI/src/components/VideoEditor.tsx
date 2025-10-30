@@ -8,21 +8,45 @@ import SubtitleList from './SubtitleList';
 import StyleEditor from './StyleEditor';
 import SubtitleDisplay from './SubtitleDisplay';
 
-// --- Definição dos Tipos (Atualizada) ---
+// --- Definição dos Tipos ---
 export interface Subtitle {
   id: number;
   startTime: number;
   endTime: number;
   text: string;
-  speaker: string; // Adicionamos o interlocutor
+  speaker: string;
 }
 
 export interface SubtitleStyle {
   fontSize: number;
   color: string;
-  // Opacidade e Cor de Fundo removidos, conforme solicitado
 }
-// ------------------------------------------
+// ----------------------------
+
+// Tipos do Backend (para formatar a requisição)
+interface BackEndSubtitleSegment {
+  start: number;
+  end: number;
+  text: string;
+  speaker: string;
+}
+
+interface BackEndStyleOptions {
+  default: {
+    font_name: string;
+    font_size: string;
+    font_color: string;
+  };
+  speakers: {}; // Não estamos usando, mas o modelo espera
+}
+
+interface RenderRequest {
+  video_path: string;
+  subtitles: BackEndSubtitleSegment[];
+  styles: BackEndStyleOptions;
+}
+// ----------------------------
+
 
 interface VideoEditorProps {
   file: File;
@@ -33,111 +57,178 @@ function VideoEditor({ file, onGoBack }: VideoEditorProps) {
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
-  
-  // 1. Estados de Carregamento e Erro
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 2. Estado de Estilo Simplificado
+  // Caminho do vídeo no servidor (recebido do /generate)
+  const [videoPath, setVideoPath] = useState<string>(''); 
+
+  // Novo estado para o botão de renderizar
+  const [isRendering, setIsRendering] = useState(false);
+
   const [styles, setStyles] = useState<SubtitleStyle>({
     fontSize: 24,
     color: '#FFFFFF',
   });
 
-  // 3. Efeito para carregar o vídeo E buscar as legendas da API
+  // (A função useEffect fetchSubtitles permanece a mesma de antes)
   useEffect(() => {
     const url = URL.createObjectURL(file);
     setVideoUrl(url);
 
-    // Função assíncrona para chamar o backend
     const fetchSubtitles = async () => {
       setIsLoading(true);
       setError(null);
       
       const formData = new FormData();
-      // 'video_file' deve ser o nome que o backend espera
-      formData.append('video_file', file); 
+      formData.append('file', file);
 
       try {
-        // Assumindo que seu backend roda em /api/v1/subtitles/generate
         const response = await fetch('/api/subtitles/generate', {
           method: 'POST',
           body: formData,
         });
 
-        // --- INÍCIO DA CORREÇÃO ---
         if (!response.ok) {
-          // A resposta NÃO foi 200 (ex: 400, 404, 500)
-          // Vamos tentar ler a resposta como texto primeiro, é mais seguro.
           const errorText = await response.text();
           let errorMessage = errorText;
-
-          // Tenta analisar o texto como JSON, mas sem quebrar se não for.
           try {
             const errData = JSON.parse(errorText);
             errorMessage = errData.detail || errData.message || errorText;
-          } catch (e) {
-            // Falhou em analisar o JSON, então era só texto.
-            // A variável 'errorMessage' já contém o 'errorText'.
-          }
-          
-          // Se a mensagem ainda estiver vazia, use o statusText
+          } catch (e) { /* Não era JSON */ }
           if (!errorMessage) {
             errorMessage = `Falha ao gerar legendas: ${response.statusText}`;
           }
-
           throw new Error(errorMessage);
         }
-        // --- FIM DA CORREÇÃO ---
 
-        // Se chegamos aqui, a resposta FOI 200 (OK).
-        // Aqui, esperamos que a resposta seja JSON.
-        const data = await response.json();
+        const data = await response.json(); 
 
-        // Mapeia a resposta da API para a interface do Front-end
-        const formattedSubtitles: Subtitle[] = data.map((seg: any, index: number) => ({
-          id: index + 1, // Gera um ID
-          startTime: seg.start, // Mapeia 'start' -> 'startTime'
-          endTime: seg.end,     // Mapeia 'end' -> 'endTime'
+        if (!data || !Array.isArray(data.segments)) {
+          throw new Error("Resposta da API inválida: 'segments' não é um array.");
+        }
+
+        const formattedSubtitles: Subtitle[] = data.segments.map((seg: any, index: number) => ({
+          id: index + 1,
+          startTime: seg.start,
+          endTime: seg.end,
           text: seg.text,
-          speaker: seg.speaker, // Recebe o interlocutor
+          speaker: seg.speaker,
         }));
 
         setSubtitles(formattedSubtitles);
+        setVideoPath(data.video_path); // Salva o caminho
+        
       } catch (err) {
         setError(err instanceof Error ? err.message : "Um erro desconhecido ocorreu.");
-        setSubtitles([]); // Limpa legendas em caso de erro
+        setSubtitles([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchSubtitles(); // Chama a função
+    fetchSubtitles();
 
-    // Limpa a URL do objeto quando o componente é desmontado
     return () => {
       URL.revokeObjectURL(url);
     };
-  }, [file]); // Executa sempre que o arquivo mudar
+  }, [file]);
 
-  // Função para atualizar o texto de uma legenda (sem alteração)
+
   const handleSubtitleTextChange = (id: number, newText: string) => {
     setSubtitles(prev =>
       prev.map(sub => (sub.id === id ? { ...sub, text: newText } : sub))
     );
   };
 
+  
+  // --- NOVA FUNÇÃO PARA RENDERIZAR E BAIXAR O VÍDEO ---
+  const handleRenderVideo = async () => {
+    setIsRendering(true);
+    setError(null); // Limpa erros antigos
+
+    // 1. Formatar legendas para o padrão do backend (start/end)
+    const formattedSubtitles: BackEndSubtitleSegment[] = subtitles.map(sub => ({
+      start: sub.startTime,
+      end: sub.endTime,
+      text: sub.text,
+      speaker: sub.speaker,
+    }));
+
+    // 2. Formatar estilos para o padrão do backend (StyleOptions)
+    const payloadStyles: BackEndStyleOptions = {
+      default: {
+        font_name: "Arial", // O backend espera isso (do models.py)
+        font_size: String(styles.fontSize), // O backend espera uma string
+        font_color: styles.color,
+      },
+      speakers: {}, // O front-end não edita isso, enviamos vazio
+    };
+
+    // 3. Montar o corpo da requisição (RenderRequest)
+    const renderPayload: RenderRequest = {
+      video_path: videoPath, // O caminho que salvamos do passo 1
+      subtitles: formattedSubtitles,
+      styles: payloadStyles,
+    };
+
+    try {
+      const response = await fetch('/api/subtitles/render', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(renderPayload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = errorText;
+        try {
+          const errData = JSON.parse(errorText);
+          errorMessage = errData.detail || errData.message || errorText;
+        } catch (e) { /* Não era JSON */ }
+        throw new Error(errorMessage || `Erro na renderização: ${response.statusText}`);
+      }
+
+      // 4. Se a resposta for OK, ela é um arquivo de vídeo (Blob)
+      const videoBlob = await response.blob();
+      
+      // 5. Criar um link de download temporário e clicar nele
+      const downloadUrl = URL.createObjectURL(videoBlob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = downloadUrl;
+      // O backend define este nome em 'src/routes/subtitle.py'
+      a.download = 'video_legendado.mp4'; 
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpar o link temporário
+      URL.revokeObjectURL(downloadUrl);
+      a.remove();
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Um erro desconhecido ocorreu na renderização.");
+    } finally {
+      setIsRendering(false);
+    }
+  };
+  // --- FIM DA NOVA FUNÇÃO ---
+
+
   return (
     <div className="editor-container">
       {/* Coluna Principal (Vídeo) */}
       <div className="editor-main-column">
+        {/* ... (Header e Video Player Wrapper) ... */}
         <div className="editor-header">
           <h3>Editar Legendas</h3>
           <button onClick={onGoBack}>Voltar</button>
         </div>
         
         <div className="video-player-wrapper">
-          {/* 4. Mostra feedback de carregamento e erro sobre o player */}
+          {/* ... (isLoading, error, VideoPlayer, SubtitleDisplay) ... */}
           {isLoading && (
             <div className="loading-overlay">
               <p>Processando vídeo... Isso pode levar alguns minutos.</p>
@@ -156,7 +247,7 @@ function VideoEditor({ file, onGoBack }: VideoEditorProps) {
           <SubtitleDisplay
             subtitles={subtitles}
             currentTime={currentTime}
-            style={styles} // Passa o estilo simplificado
+            style={styles}
           />
         </div>
       </div>
@@ -167,7 +258,6 @@ function VideoEditor({ file, onGoBack }: VideoEditorProps) {
           <h3>Ferramentas</h3>
         </div>
         <div className="editor-scrollable-content">
-          {/* Editor de Estilo (simplificado) */}
           <StyleEditor
             styles={styles}
             onStyleChange={setStyles}
@@ -175,12 +265,23 @@ function VideoEditor({ file, onGoBack }: VideoEditorProps) {
           
           <hr />
 
-          {/* Editor da Lista de Legendas */}
           <SubtitleList
             subtitles={subtitles}
             onTextChange={handleSubtitleTextChange}
           />
         </div>
+        
+        {/* --- ADICIONE ESTA SEÇÃO NO FINAL DA COLUNA LATERAL --- */}
+        <div className="editor-footer">
+          <button 
+            className="button-render"
+            onClick={handleRenderVideo}
+            disabled={isLoading || isRendering} // Desativa se estiver carregando OU renderizando
+          >
+            {isRendering ? "Renderizando..." : "Renderizar e Baixar"}
+          </button>
+        </div>
+        {/* --------------------------------------------------- */}
       </div>
     </div>
   );
