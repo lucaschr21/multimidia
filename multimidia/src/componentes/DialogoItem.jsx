@@ -8,13 +8,13 @@ function DialogoItem({ dialogo, interlocutores, onApagar, onAtualizar }) {
     setTexto(dialogo.texto);
   }, [dialogo.texto]);
 
+  // --- ESTA É A MUDANÇA ---
   const handleTextChange = (e) => {
-    setTexto(e.target.value);
-  };
-  const handleTextBlur = () => {
-    if (texto !== dialogo.texto) {
-      onAtualizar(dialogo.id, { texto: texto });
-    }
+    const novoTexto = e.target.value;
+
+    setTexto(novoTexto);
+
+    onAtualizar(dialogo.id, { texto: novoTexto });
   };
 
   const handleDropdownSelect = (newId) => {
@@ -45,7 +45,6 @@ function DialogoItem({ dialogo, interlocutores, onApagar, onAtualizar }) {
         >
           {tag}
         </span>
-
         <button
           className="btn btn-sm btn-link text-danger position-absolute"
           style={{ top: "5px", right: "5px" }}
@@ -59,7 +58,6 @@ function DialogoItem({ dialogo, interlocutores, onApagar, onAtualizar }) {
         className="form-control border-0 p-0"
         value={texto}
         onChange={handleTextChange}
-        onBlur={handleTextBlur}
         rows="3"
         style={{ resize: "none", boxShadow: "none" }}
       ></textarea>

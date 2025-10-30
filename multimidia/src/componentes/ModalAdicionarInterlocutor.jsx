@@ -23,7 +23,7 @@ function ModalAdicionarInterlocutor({
   ];
 
   const [nome, setNome] = useState("");
-  const [tipo, setTipo] = useState("as Masculino");
+  const [tipo, setTipo] = useState("BR Masculino"); // Valor padrão corrigido
   const [corSelecionada, setCorSelecionada] = useState(cores[2]);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ function ModalAdicionarInterlocutor({
         setCorSelecionada(interlocutorParaEditar.cor);
       } else {
         setNome("");
-        setTipo("as Masculino");
+        setTipo("BR Masculino");
         setCorSelecionada(cores[2]);
       }
     }
@@ -113,15 +113,21 @@ function ModalAdicionarInterlocutor({
                   value={tipo}
                   onChange={(e) => setTipo(e.target.value)}
                 >
-                  <option value="as Masculino">
+                  <option value="BR Feminino">BR Camila (BR - Feminino)</option>
+                  <option value="BR Feminino">
+                    BR Vitória (BR - Feminino)
+                  </option>
+                  <option value="BR Masculino">
                     BR Ricardo (BR - Masculino)
                   </option>
-                  <option value="as Feminino">
-                    BR Francisca (BR - Feminino)
+                  <option value="BR Masculino">
+                    BR Thiago (BR - Masculino)
                   </option>
-                  <option value="as Masculino">
-                    PT Joaquim (PT - Masculino)
+                  <option value="PT Masculino">
+                    PT Cristiano (PT - Masculino)
                   </option>
+
+                  <option value="PT Feminino">PT Inês (PT - Feminino)</option>
                 </select>
               </div>
 

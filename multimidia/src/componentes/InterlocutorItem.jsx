@@ -1,13 +1,10 @@
-import React from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
 function InterlocutorItem({ interlocutor, onApagar, onEditar }) {
   const { id, nome, tipo, cor } = interlocutor;
 
   const handleApagar = () => {
-    if (window.confirm(`Tem certeza que deseja apagar "${nome}"?`)) {
-      onApagar(id);
-    }
+    onApagar(id);
   };
 
   const handleEditar = () => {
@@ -15,24 +12,35 @@ function InterlocutorItem({ interlocutor, onApagar, onEditar }) {
   };
 
   return (
-    <div
-      className="d-flex justify-content-between align-items-center p-2 rounded h-100"
-      style={{ backgroundColor: `${cor}20` }}
-    >
-      <div>
+    <div className="d-flex justify-content-between align-items-center p-2 rounded h-100 bg-white border shadow-sm">
+      <div className="d-flex align-items-center" style={{ gap: "0.6rem" }}>
         <div
-          className="d-inline-block rounded-circle me-2"
+          className="d-inline-block rounded-circle"
           style={{
-            width: "10px",
-            height: "10px",
+            width: "12px",
+            height: "12px",
             backgroundColor: cor,
-            verticalAlign: "middle",
+            flexShrink: 0,
           }}
         ></div>
-        <span className="fw-semibold">{nome}</span>
-        <span className="text-muted ms-1">({tipo})</span>
+
+        <div>
+          <div
+            className="fw-semibold"
+            style={{ lineHeight: 1.2, fontSize: "0.95rem" }} // 'lineHeight' junta os textos
+          >
+            {nome}
+          </div>
+          <div
+            className="text-muted"
+            style={{ lineHeight: 1.2, fontSize: "0.8rem" }} // 'small' e 'lineHeight'
+          >
+            ({tipo})
+          </div>
+        </div>
       </div>
-      <div>
+
+      <div className="d-flex">
         <button
           className="btn btn-sm btn-link text-secondary"
           onClick={handleEditar}

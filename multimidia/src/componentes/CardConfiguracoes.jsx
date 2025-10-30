@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import { FiInfo } from "react-icons/fi";
 import { BsSoundwave } from "react-icons/bs";
 
-function CardConfiguracoes() {
-  const [velocidade, setVelocidade] = useState(1.0);
-
+function CardConfiguracoes({
+  velocidade,
+  setVelocidade,
+  isGenerating,
+  onGerarNarracao,
+  totalFalas,
+}) {
   const handleVelocidadeChange = (event) => {
     setVelocidade(parseFloat(event.target.value));
   };
@@ -12,7 +16,6 @@ function CardConfiguracoes() {
   const min = 0.5;
   const max = 2.0;
   const fillPercentage = ((velocidade - min) / (max - min)) * 100;
-
   const sliderStyle = {
     "--fill-percentage": `${fillPercentage}%`,
   };
@@ -35,7 +38,6 @@ function CardConfiguracoes() {
               {velocidade.toFixed(1)}x
             </span>
           </div>
-
           <input
             type="range"
             className="custom-slider-black"
@@ -54,9 +56,28 @@ function CardConfiguracoes() {
           </div>
         </div>
 
-        <button className="btn btn-dark btn-lg w-100 py-3 fw-semibold">
-          Gerar Narração
-        </button>
+        {isGenerating ? (
+          <div className="text-start">
+            <button
+              className="btn btn-secondary btn-lg w-100 py-3 fw-semibold"
+              disabled
+            >
+              <span
+                className="spinner-border spinner-border-sm me-2"
+                aria-hidden="true"
+              ></span>
+              Gerando...
+            </button>
+          </div>
+        ) : (
+          <button
+            className="btn btn-dark btn-lg w-100 py-3 fw-semibold"
+            onClick={onGerarNarracao}
+            disabled={totalFalas === 0}
+          >
+            Gerar Narração
+          </button>
+        )}
 
         <div
           className="alert alert-primary d-flex align-items-start gap-2 small"
@@ -68,7 +89,6 @@ function CardConfiguracoes() {
             criando um diálogo natural.
           </div>
         </div>
-
         <div
           className="alert d-flex align-items-start gap-2 small"
           style={{ backgroundColor: "#f3e8ff", color: "#6b21a8" }}
