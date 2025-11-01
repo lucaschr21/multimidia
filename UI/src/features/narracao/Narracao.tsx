@@ -62,7 +62,7 @@ export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
 
     const n8nWebhookUrl = "https://n8n.belembioenergia.com.br/webhook/9a1e2975-a921-4505-9533-1dc28c896b91";
 
-    const falaUnica = fala; // Já é a fala singular
+    const falaUnica = fala; 
     const interlocutorUnico = interlocutores[0];
 
     if (!falaUnica || !interlocutorUnico) {
@@ -325,19 +325,8 @@ export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
           >
             {isLoading ? 'Gerando...' : 'Gerar Narração'}
           </button>
-          <div className="info-box info-box-blue">
-            <Info size={16} />
-            <span>
-              Cada fala será narrada com a voz do interlocutor selecionado,
-              criando um diálogo natural.
-            </span>
-          </div>
-          <div className="info-box info-box-purple">
-            <Info size={16} />
-            <span>
-              Adicione interlocutores e atribua vozes diferentes para cada um.
-            </span>
-          </div>
+          
+          
         </div>
       </main>
 
