@@ -1,0 +1,57 @@
+[project]
+name = "multimidia"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.13.9"
+dependencies = [
+    "fastapi>=0.120.0",
+    "ffmpeg-python>=0.2.0",
+    "huggingface-hub>=0.36.0",
+    "lightning==2.5.5",
+    "openai-whisper>=20250625",
+    "pyannote-audio==4.0.1",
+    "python-multipart>=0.0.20",
+    "torchcodec>=0.8.0",
+    "torchmetrics>=1.0.3",
+    "tqdm>=4.67.1",
+    "transformers>=4.57.1",
+    "uvicorn[standard]>=0.38.0",
+    "torch>=2.9.0",
+    "torchaudio>=2.9.0",
+    "torchvision>=0.24.0",
+]
+
+[tool.uv.sources]
+torchmetrics = { index = "torchmetrics" }
+tqdm = { index = "tqdm" }
+torch = { index = "torch" }
+torchaudio = { index = "torchaudio" }
+torchvision = { index = "torchvision" }
+
+
+[[tool.uv.index]]
+name = "torchmetrics"
+url = "https://pypi.org/simple/"
+
+[[tool.uv.index]]
+name = "tqdm"
+url = "https://pypi.org/simple/"
+
+[[tool.uv.index]]
+name = "torch"
+url = "https://download.pytorch.org/whl/cpu/"
+
+[[tool.uv.index]]
+name = "torchaudio"
+url = "https://download.pytorch.org/whl/cpu/"
+
+[[tool.uv.index]]
+name = "torchvision"
+url = "https://download.pytorch.org/whl/cpu/"
+
+[tool.uv]
+index-strategy = "unsafe-best-match"
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
