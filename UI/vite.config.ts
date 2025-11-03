@@ -7,8 +7,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://unindustrial-suzy-biggish.ngrok-free.dev",
-        // target: "http://localhost:8000", comente a linha de cima e descomente esta caso o backend seja executado localmente
+        // target: "https://unindustrial-suzy-biggish.ngrok-free.dev",
+        target: "http://localhost:8000",
         changeOrigin: true,
       },
     },
