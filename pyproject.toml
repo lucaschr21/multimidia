@@ -25,6 +25,10 @@ dependencies = [
 [tool.uv.sources]
 torchmetrics = { index = "torchmetrics" }
 tqdm = { index = "tqdm" }
+torch = { index = "torch" }
+torchaudio = { index = "torchaudio" }
+torchvision = { index = "torchvision" }
+
 
 [[tool.uv.index]]
 name = "torchmetrics"
@@ -34,5 +38,20 @@ url = "https://pypi.org/simple/"
 name = "tqdm"
 url = "https://pypi.org/simple/"
 
+[[tool.uv.index]]
+name = "torch"
+url = "https://download.pytorch.org/whl/cpu/"
+
+[[tool.uv.index]]
+name = "torchaudio"
+url = "https://download.pytorch.org/whl/cpu/"
+
+[[tool.uv.index]]
+name = "torchvision"
+url = "https://download.pytorch.org/whl/cpu/"
+
 [tool.uv]
 index-strategy = "unsafe-best-match"
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]

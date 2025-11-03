@@ -1,0 +1,29 @@
+#root {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 250%;
+  margin-top: -1%;
+  margin-bottom: -3%;
+}
+
+.title svg {
+  color: #007bff;
+}
+
+.subtitle {
+  font-size: 125%;
+}
+
+.features-container {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 4rem;
+}

@@ -1,162 +1,193 @@
-# API Backend
+# Projeto de Legendas e Narração
 
-Este documento descreve as rotas da API backend responsáveis pela funcionalidade de geração e renderização de legendas para vídeos.
+![Python](https://img.shields.io/badge/Python-3.13.9-3776AB?logo=python&logoColor=white)
+![n8n](https://img.shields.io/badge/n8n-1.118.1-e3496d?logo=n8n&logoColor=white)
+![React](https://img.shields.io/badge/React-19.1.1-%2320232a?logo=react&logoColor=white)
 
-## Instalação
+![FastAPI](https://img.shields.io/badge/FastAPI-009485?logo=fastapi&logoColor=white)
+![Whisper](https://img.shields.io/badge/Whisper-black?logo=openai&logoColor=white)
+![Pyannote.audio](https://img.shields.io/badge/pyannote.audio-0b8f66?logo=huggingface&logoColor=white)
+![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?logo=ffmpeg&logoColor=white)
 
-`powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
-
-`uv venv --python 3.13.9`
-
-`.venv\Scripts\activate`
-
-`uv sync`
-
-## Execução
-
-`uvicorn src.main:app`
+## Créditos
+- [Lucas Christian](https://github.com/lucaschr21)
+- [Marcos Derick](https://github.com/MrcsBrigida)
+- [Lucas Soares](https://github.com/Lucaslssoares)
+- [João Vitor](https://github.com/vitorez)
+- Gustavo Santiago
+- Luiz Carvalho
+- Alan Leão
 
 ## Visão Geral
 
-O fluxo de legendagem no backend ocorre em duas etapas principais, expostas por duas rotas de API:
+Este é um projeto acadêmico que consiste em uma **aplicação web completa para processamento de mídia**, com foco em **Inteligência Artificial aplicada à legendagem e narração de vídeos**.
 
-1.  **Geração de Dados (`/generate`):** O frontend envia um arquivo de vídeo. O backend processa este vídeo (transcrição com Whisper, diarização com Pyannote), mapeia os interlocutores detectados para nomes genéricos (ex: "Interlocutor 1"), salva o vídeo original e retorna os dados da legenda (texto, tempos, nomes dos interlocutores) juntamente com um identificador (caminho) para o vídeo salvo.
-2.  **Renderização do Vídeo (`/render`):** O frontend, após permitir que o usuário edite os dados da legenda e as opções de estilo (cores, nomes dos interlocutores), envia essas informações (legendas editadas, estilos, identificador do vídeo original) de volta para o backend. O backend então "queima" (renderiza) essas legendas estilizadas no vídeo original e disponibiliza o vídeo final para download.
+A aplicação combina uma interface moderna em **React** com uma **API robusta em FastAPI (Python)**, integrando modelos da OpenAI e bibliotecas avançadas como **Whisper** e **Pyannote.audio** para oferecer resultados de alta precisão.
 
-## Pré-requisitos
+## Tecnologias Principais
 
-* O servidor backend FastAPI precisa estar rodando. Por padrão: `http://127.0.0.1:8000`.
-
-## Base URL
-
-Todos os endpoints descritos abaixo são relativos à base URL da API:
-
-`http://127.0.0.1:8000/api/subtitles`
-
-*(Nota: O host e a porta podem variar dependendo de como o backend é iniciado. Verifique o arquivo `.env` ou a saída do console do backend).*
-
+- **Frontend:** [React](https://react.dev/), [Vite](https://vite.dev/)
+- **Backend:**
+    - **Legenda:** [Python](https://www.python.org/), [FastAPI](https://fastapi.tiangolo.com/)
+        - **Modelos:** [OpenAI Whisper](https://openai.com/pt-BR/index/whisper/) (Transcrição), [Pyannote.audio](https://www.pyannote.ai/blog/community-1)(Diarização)
+    - **Narração:** [n8n](https://n8n.io/)
+        - **Modelos:**  [OpenAI TTS](https://openai.com/index/introducing-our-next-generation-audio-models/) (Narração)
 ---
+- **Processamento de Mídia:** [FFmpeg](https://www.ffmpeg.org/) 
+- **Gerenciamento de dependências:** [uv](https://docs.astral.sh/uv/)
 
-## Endpoints
+## Funcionalidades Principais
 
-### 1. Gerar Dados da Legenda
+### Fluxo do usuário
 
-* **Propósito:** Enviar um vídeo para processamento e obter os dados da legenda (texto, tempos, nomes dos interlocutores) e o caminho do arquivo salvo no servidor.
-* **URL:** `/generate`
-* **Método:** `POST`
-* **Corpo da Requisição (`Request Body`):** `multipart/form-data`
-    * **Chave (Key):** `file`
-    * **Valor (Value):** O arquivo de vídeo a ser processado (ex: `meu_video.mp4`).
-* **Cabeçalhos da Requisição (`Headers`):**
-    * `Content-Type: multipart/form-data`
-* **Resposta de Sucesso (`Success Response` - 200 OK):**
-    * **Tipo:** `application/json`
-    * **Estrutura:**
-        ```json
-        {
-          "segments": [
-            {
-              "start": float,  // Tempo inicial do segmento em segundos (ex: 0.53)
-              "end": float,    // Tempo final do segmento em segundos (ex: 2.81)
-              "text": string,  // O texto transcrito para este segmento
-              "speaker": string // O nome atribuído ao interlocutor (ex: "Interlocutor 1", "Interlocutor 2", "Desconhecido")
-            }
-            // ... mais segmentos
-          ],
-          "video_path": string // O caminho/identificador do vídeo salvo no backend (ex: "uploads/uuid-aleatorio.mp4"). Guarde este valor!
-        }
-        ```
-    * **Exemplo:**
-        ```json
-        {
-          "segments": [
-            { "start": 0.0, "end": 1.84, "text": "Hoje o povo tem preconceito com funk.", "speaker": "Interlocutor 1" },
-            { "start": 1.84, "end": 6.24, "text": "Você não acha daqui uns anos...", "speaker": "Interlocutor 1" },
-            { "start": 6.24, "end": 8.44, "text": "Tomara, sabe quem é que tem que fazer isso?", "speaker": "Interlocutor 2" }
-          ],
-          "video_path": "uploads/85741736-a09a-4b8a-9b7f-857d4b58ec44.mp4"
-        }
-        ```
-* **Possíveis Respostas de Erro (`Error Responses`):**
-    * `400 Bad Request`: "Tipo de arquivo inválido. Por favor, envie um vídeo."
-    * `422 Unprocessable Entity`: A chave `file` não foi encontrada no `form-data`.
-    * `500 Internal Server Error`: Falha ao salvar o arquivo; Erro durante o processamento do Whisper/Pyannote. Verificar detalhes no corpo da resposta ou logs do backend.
-    * `503 Service Unavailable`: Os modelos de IA não puderam ser carregados no backend.
-* **Notas Importantes:**
-    * Esta requisição pode demorar **bastante**. O frontend deve exibir um indicador de carregamento ("loading") e estar preparado para timeouts longos.
-    * **Guarde o valor de `video_path`** retornado. Ele é essencial para a etapa de renderização.
+```mermaid
+flowchart LR
+    A((Usuário)) --> B{Escolha da Funcionalidade} -- "Gerar Legendas" --> L1[Upload de Vídeo]
+    B -- "Gerar Narração" --> N1["`Entrada de Texto
+    Seleção de voz
+    Seleção de velocidade`"]
+    subgraph "Fluxo de Legendas"
+        L1 --> L2[Transcrição]
+        L1 --> L3[Diarização]
+        L2 & L3 --> L4([Edição])
+        L4 --> L5[Renderização]
+        L5 --> L6[Download]
+    end
 
----
+    subgraph "Fluxo de Narração"
+        N1 --> N2[Geração de Áudio]
+        N2 --> N3[Audição]
+        N2 --> N4[Download]
+    end
+```
 
-### 2. Renderizar Vídeo com Legendas
+**Geração e Edição de Legendas:**
 
-* **Propósito:** Enviar os dados da legenda (editados ou não), as opções de estilo e o `video_path` (obtido na etapa anterior) para que o backend gere o vídeo final com as legendas aplicadas e o retorne para download.
-* **URL:** `/render`
-* **Método:** `POST`
-* **Corpo da Requisição (`Request Body`):** `application/json`
-    * **Estrutura:**
-        ```json
-        {
-          "video_path": string, // O valor exato de 'video_path' retornado pela rota /generate
-          "subtitles": [
-            {
-              "start": float,
-              "end": float,
-              "text": string,   // O texto (pode ter sido editado pelo usuário)
-              "speaker": string // O nome do interlocutor (ex: "Interlocutor 1", "Desconhecido")
-            }
-            // ... lista completa de segmentos de legenda
-          ],
-          "styles": {
-            "default": {
-              "font_name": string, // Nome da fonte padrão (ex: "Arial")
-              "font_size": string, // Tamanho da fonte padrão (ex: "24")
-              "font_color": string // Cor hexadecimal padrão (ex: "#FFFFFF")
-            },
-            "speakers": {
-              // Chave: O nome do interlocutor retornado por /generate (ex: "Interlocutor 1")
-              "NomeDoInterlocutor": {
-                "name": string,  // Novo nome para este interlocutor (editado pelo usuário, ex: "Ana")
-                "color": string // Nova cor hexadecimal para este interlocutor (ex: "#FFFF00")
-              }
-              // ... entradas para cada interlocutor (incluindo "Desconhecido", se aplicável)
-              //     que deve ter estilo/nome personalizado.
-            }
-          }
-        }
-        ```
-    * **Exemplo:**
-        ```json
-        {
-          "video_path": "uploads/85741736-a09a-4b8a-9b7f-857d4b58ec44.mp4",
-          "subtitles": [
-            { "start": 0.0, "end": 1.84, "text": "Texto editado aqui.", "speaker": "Interlocutor 1" },
-            { "start": 1.84, "end": 6.24, "text": "Outra fala.", "speaker": "Interlocutor 1" },
-            { "start": 6.24, "end": 8.44, "text": "Fala da Pessoa A.", "speaker": "Interlocutor 2" }
-          ],
-          "styles": {
-            "default": { "font_name": "Verdana", "font_size": "22", "font_color": "#EEEEEE" },
-            "speakers": {
-              "Interlocutor 2": { "name": "Entrevistador", "color": "#00FF00" },
-              "Interlocutor 1": { "name": "Convidado", "color": "#FFD700" }
-            }
-          }
-        }
-        ```
-* **Cabeçalhos da Requisição (`Headers`):**
-    * `Content-Type: application/json`
-* **Resposta de Sucesso (`Success Response` - 200 OK):**
-    * **Tipo:** `video/mp4`
-    * **Descrição:** O corpo da resposta é o próprio arquivo de vídeo finalizado. O navegador deve iniciar o download automaticamente.
-    * **Cabeçalhos da Resposta (`Headers`):**
-        * `Content-Disposition: attachment; filename="video_legendado.mp4"`
-* **Possíveis Respostas de Erro (`Error Responses`):**
-    * `404 Not Found`: O `video_path` enviado no JSON não foi encontrado no servidor.
-    * `422 Unprocessable Entity`: O JSON enviado não corresponde à estrutura esperada. Verificar detalhes no corpo da resposta.
-    * `500 Internal Server Error`: Falha durante o processo de renderização do `ffmpeg`. Verificar detalhes no corpo da resposta ou logs do backend.
-    * `503 Service Unavailable`: Os serviços (Subtitle ou Rendering) não puderam ser carregados.
-* **Notas Importantes:**
-    * Esta requisição também pode demorar. O frontend deve exibir um indicador de carregamento.
-    * O vídeo original (`uploads/...`) e o vídeo renderizado (`output/...`) são **apagados** do servidor após o download ser concluído com sucesso.
+1. **Upload:**  
+   O usuário seleciona um vídeo (ex: `.mp4`) no frontend.
 
----
+2. **Processamento de IA:**  
+   O backend realiza duas tarefas:
+   - **Transcrição (SST):** O áudio é processado pelo **OpenAI Whisper** para gerar texto com *timestamps*.  
+   - **Diarização:** O áudio é processado pelo **Pyannote.audio** para identificar os interlocutores.
+
+3. **Edição no Frontend:**  
+   O usuário pode:
+   - Corrigir o texto da transcrição.  
+   - Ajustar cores, fontes e estilo das legendas.
+
+4. **Renderização Final:**  
+   O backend utiliza **FFmpeg** para “queimar” as legendas estilizadas diretamente no vídeo e disponibiliza o arquivo final para download.
+
+**Narração (Text-to-Speech):**
+
+1. **Entrada de Texto:**  
+   O usuário insere ou cola um roteiro no frontend.
+
+2. **Seleção de Voz:**  
+   O usuário define seleciona vozes pré-definidas (masculina, feminina, etc).
+
+3. **Orquestração via n8n:**  
+   Ao clicar em “Gerar Áudio”, o backend pode acionar um **workflow no n8n**, que utiliza a **API de TTS da OpenAI**.
+
+4. **Geração e Retorno:**  
+   Os blocos de texto são transformados em áudio, combinados em um único arquivo `.mp3` e enviados ao usuário para audição ou download.
+
+
+## Arquitetura e Estrutura do Projeto
+
+O projeto segue **boas práticas de engenharia de software** (princípios SOLID), com separação clara entre camadas e responsabilidades.
+- **main.py** — Ponto de entrada da aplicação FastAPI, inicializa rotas e configurações gerais.  
+- **models/** — Contém os schemas Pydantic usados para validação e definição de contratos de dados.  
+    - `subtitle.py`: schemas relacionados aos dados de legenda.
+- **routes/** — Define os endpoints HTTP que expõem as funcionalidades da API.
+    - `subtitle.py`: endpoint dos serviços de legenda.
+- **services/** — Implementa a lógica principal de IA e processamento:  
+  - `transcription.py`: transcrição de áudio com Whisper.  
+  - `diarization.py`: diarização de locutores com Pyannote.  
+  - `rendering.py`: renderização de vídeo/áudio via FFmpeg.  
+  - `subtitle.py`: orquestra geração e sincronização de legendas. 
+
+
+## Gerenciamento de Desempenho
+
+- **Lazy Loading:**  
+  Modelos pesados (Whisper e Pyannote) são carregados **sob demanda** (apenas na primeira execução).  
+  O carregamento é controlado com `threading.Lock` para ser *thread-safe*.
+
+- **Tratamento de Áudio:**  
+  FFmpeg realiza a extração e reamostragem do áudio para **16kHz mono**, o formato exigido pelos modelos de IA.
+
+## Instalação e Execução
+> [!CAUTION]
+> Atualmente o projeto só funciona no Linux (testado em distros baseadas em debian) devido a problemas de renderização envolvendo o FFmpeg no Windows.
+
+> [!WARNING]
+> É recomandável ter uma GPU Nvidia com suporte ao [CUDA](https://developer.nvidia.com/cuda-gpus) ou GPU AMD com suporte ao [ROCm](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html), caso contrário, os modelos de IA serão executados via CPU, reduzindo drasticamente a velocidade da transcrição e diarização.
+
+### Instalar Pré-requisitos
+#### Instalar CUDA (ignore caso vá executar via CPU ou via ROCm)
+```bash
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-ubuntu2404.pin
+sudo mv cuda-ubuntu2404.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/13.0.2/local_installers/cuda-repo-ubuntu2404-13-0-local_13.0.2-580.95.05-1_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu2404-13-0-local_13.0.2-580.95.05-1_amd64.deb
+sudo cp /var/cuda-repo-ubuntu2404-13-0-local/cuda-*-keyring.gpg /usr/share/keyrings/
+sudo apt-get update
+sudo apt-get -y install cuda-toolkit-13-0
+sudo apt-get install -y cuda-drivers
+```
+#### Instalar ROCm (ignore caso vá executar via CPU ou via CUDA)
+```bash
+wget https://repo.radeon.com/amdgpu-install/7.1/ubuntu/noble/amdgpu-install_7.1.70100-1_all.deb
+sudo apt install ./amdgpu-install_7.1.70100-1_all.deb
+sudo apt update
+sudo apt install python3-setuptools python3-wheel
+sudo usermod -a -G render,video $LOGNAME 
+sudo apt install rocm
+wget https://repo.radeon.com/amdgpu-install/7.1/ubuntu/noble/amdgpu-install_7.1.70100-1_all.deb
+sudo apt install ./amdgpu-install_7.1.70100-1_all.deb
+sudo apt update
+sudo apt install "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)"
+sudo apt install amdgpu-dkms
+```
+
+#### Instalação Obrigatória
+```bash
+sudo apt update
+sudo apt install python3
+sudo apt install ffmpeg
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+\. "$HOME/.nvm/nvm.sh"
+nvm install 24
+```
+### Clonar o Repositório
+```bash
+git clone https://github.com/lucaschr21/multimidia
+cd multimidia
+```
+
+### Criar o Ambiente Virtual
+```bash
+uv venv --python 3.13.9
+source .venv/bin/activate
+```
+
+### Instalar Depêndencias
+```bash
+uv sync
+cd UI
+npm install
+cd ..
+```
+
+### Executar
+```bash
+uvicorn src.main:app
+```
+Abra outro terminal, então digite:
+```bash
+cd UI
+npm start
+npm run dev
+```
