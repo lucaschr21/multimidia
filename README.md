@@ -9,6 +9,15 @@
 ![Pyannote.audio](https://img.shields.io/badge/pyannote.audio-0b8f66?logo=huggingface&logoColor=white)
 ![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?logo=ffmpeg&logoColor=white)
 
+## Créditos
+- [Lucas Christian](https://github.com/lucaschr21)
+- [Marcos Derick](https://github.com/MrcsBrigida)
+- [Lucas Soares](https://github.com/Lucaslssoares)
+- [João Vitor](https://github.com/vitorez)
+- Gustavo Santiago
+- Luiz Carvalho
+- Alan Leão
+
 ## Visão Geral
 
 Este é um projeto acadêmico que consiste em uma **aplicação web completa para processamento de mídia**, com foco em **Inteligência Artificial aplicada à legendagem e narração de vídeos**.
@@ -18,10 +27,12 @@ A aplicação combina uma interface moderna em **React** com uma **API robusta e
 ## Tecnologias Principais
 
 - **Frontend:** [React](https://react.dev/), [Vite](https://vite.dev/)
-- **Backend/Legenda:** [Python](https://www.python.org/), [FastAPI](https://fastapi.tiangolo.com/)
-    - **Modelos:** [OpenAI Whisper](https://openai.com/pt-BR/index/whisper/) (Transcrição), [Pyannote.audio](https://www.pyannote.ai/blog/community-1) (Diarização)
-- **Backend/Narração:** [n8n](https://n8n.io/)
-    - **Modelos:**  [OpenAI TTS](https://openai.com/index/introducing-our-next-generation-audio-models/) (Narração)  
+- **Backend:**
+    - **Legenda:** [Python](https://www.python.org/), [FastAPI](https://fastapi.tiangolo.com/)
+        - **Modelos:** [OpenAI Whisper](https://openai.com/pt-BR/index/whisper/) (Transcrição), [Pyannote.audio](https://www.pyannote.ai/blog/community-1)(Diarização)
+    - **Narração:** [n8n](https://n8n.io/)
+        - **Modelos:**  [OpenAI TTS](https://openai.com/index/introducing-our-next-generation-audio-models/) (Narração)
+---
 - **Processamento de Mídia:** [FFmpeg](https://www.ffmpeg.org/) 
 - **Gerenciamento de dependências:** [uv](https://docs.astral.sh/uv/)
 
@@ -108,9 +119,11 @@ O projeto segue **boas práticas de engenharia de software** (princípios SOLID)
   FFmpeg realiza a extração e reamostragem do áudio para **16kHz mono**, o formato exigido pelos modelos de IA.
 
 ## Instalação e Execução
-### ATENÇÃO
-- Atualmente o projeto só funciona no Linux (testado em distros baseadas em debian) devido a problemas de renderização envolvendo o FFmpeg no Windows.
-- É recomandável ter uma GPU Nvidia com suporte ao [CUDA](https://developer.nvidia.com/cuda-gpus) ou GPU AMD com suporte ao [ROCm](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html), caso contrário, os modelos de IA serão executados via CPU, reduzindo drasticamente a velocidade da transcrição e diarização.
+> [!CAUTION]
+> Atualmente o projeto só funciona no Linux (testado em distros baseadas em debian) devido a problemas de renderização envolvendo o FFmpeg no Windows.
+
+> [!WARNING]
+> É recomandável ter uma GPU Nvidia com suporte ao [CUDA](https://developer.nvidia.com/cuda-gpus) ou GPU AMD com suporte ao [ROCm](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html), caso contrário, os modelos de IA serão executados via CPU, reduzindo drasticamente a velocidade da transcrição e diarização.
 
 ### Instalar Pré-requisitos
 #### Instalar CUDA (ignore caso vá executar via CPU ou via ROCm)
