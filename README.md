@@ -37,19 +37,15 @@ flowchart LR
     B -- "Gerar Narração" --> N1["`Entrada de Texto
     Seleção de voz
     Seleção de velocidade`"]
-    subgraph "Fluxo de Legendas"
-        L1 --> L2[Transcrição]
-        L1 --> L3[Diarização]
-        L2 & L3 --> L4([Edição])
-        L4 --> L5[Renderização]
-        L5 --> L6[Download]
-    end
+    L1 --> L2[Transcrição]
+    L1 --> L3[Diarização]
+    L2 & L3 --> L4([Edição])
+    L4 --> L5[Renderização]
+    L5 --> L6[Download]
 
-    subgraph "Fluxo de Narração"
-        N1 --> N2[Geração de Áudio]
-        N2 --> N3[Audição]
-        N2 --> N4[Download]
-    end
+    N1 --> N2[Geração de Áudio]
+    N2 --> N3[Audição]
+    N2 --> N4[Download]
 ```
 
 **Geração e Edição de Legendas:**
@@ -182,6 +178,7 @@ cd UI
 npm start
 npm run dev
 ```
+
 
 
 
