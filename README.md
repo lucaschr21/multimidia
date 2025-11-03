@@ -1,19 +1,19 @@
-# Projeto de Legendas e Narração
+<h1 align="center">Projeto de Legendas e Narração</h1>
 Projeto acadêmico que consiste em uma **aplicação web completa para processamento de mídia**, com foco em **Inteligência Artificial aplicada à legendagem e narração de vídeos**.
 
 A aplicação combina uma interface moderna em **React** com uma **API robusta em FastAPI (Python)**, integrando modelos da OpenAI e bibliotecas avançadas como **Whisper** e **Pyannote.audio** para oferecer resultados de alta precisão.
 
 <div align="center">
     
-![Python](https://img.shields.io/badge/Python-3.13.9-3776AB?logo=python&logoColor=3776AB) 
-![n8n](https://img.shields.io/badge/n8n-1.118.1-e3496d?logo=n8n&logoColor=e3496d)
-![React](https://img.shields.io/badge/React-19.1.1-%2320232a?logo=react&logoColor=2320232a)
+[![Python](https://img.shields.io/badge/Python-3.13.9-3776AB?logo=python&logoColor=3776AB)](https://www.python.org/)
+[![n8n](https://img.shields.io/badge/n8n-1.118.1-e3496d?logo=n8n&logoColor=e3496d)](https://n8n.io/)
+[![React](https://img.shields.io/badge/React-19.1.1-%2320232a?logo=react&logoColor=2320232a)](https://react.dev/)
 
 
-![FastAPI](https://img.shields.io/badge/FastAPI-009485?logo=fastapi&logoColor=white)
-![Whisper](https://img.shields.io/badge/Whisper-black?logo=openai&logoColor=white)
-![Pyannote.audio](https://img.shields.io/badge/pyannote.audio-0b8f66?logo=huggingface&logoColor=white)
-![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?logo=ffmpeg&logoColor=white)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009485?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Whisper](https://img.shields.io/badge/Whisper-black?logo=openai&logoColor=white)](https://openai.com/pt-BR/index/whisper/)
+[![Pyannote.audio](https://img.shields.io/badge/pyannote.audio-0b8f66?logo=huggingface&logoColor=white)](https://openai.com/pt-BR/index/whisper/)
+[![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?logo=ffmpeg&logoColor=white)](https://www.ffmpeg.org/)
 
 </div>
 
@@ -181,4 +181,5 @@ cd UI
 npm start
 npm run dev
 ```
+
 
