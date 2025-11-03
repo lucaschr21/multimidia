@@ -5,9 +5,9 @@ A aplicação combina uma interface moderna em **React** com uma **API robusta e
 
 <div align="center">
     
-![Python](https://img.shields.io/badge/Python-3.13.9-3776AB?logo=python&logoColor=white)
-![n8n](https://img.shields.io/badge/n8n-1.118.1-e3496d?logo=n8n&logoColor=white)
-![React](https://img.shields.io/badge/React-19.1.1-%2320232a?logo=react&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.13.9-3776AB?logo=python&logoColor=3776AB) 
+![n8n](https://img.shields.io/badge/n8n-1.118.1-e3496d?logo=n8n&logoColor=e3496d)
+![React](https://img.shields.io/badge/React-19.1.1-%2320232a?logo=react&logoColor=2320232a)
 
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-009485?logo=fastapi&logoColor=white)
