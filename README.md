@@ -1,4 +1,5 @@
 <h1 align="center">Projeto de Legendas e Narração</h1>
+
 Projeto acadêmico que consiste em uma **aplicação web completa para processamento de mídia**, com foco em **Inteligência Artificial aplicada à legendagem e narração de vídeos**.
 
 A aplicação combina uma interface moderna em **React** com uma **API robusta em FastAPI (Python)**, integrando modelos da OpenAI e bibliotecas avançadas como **Whisper** e **Pyannote.audio** para oferecer resultados de alta precisão.
@@ -181,6 +182,7 @@ cd UI
 npm start
 npm run dev
 ```
+
 
 
 
