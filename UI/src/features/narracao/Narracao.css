@@ -1,6 +1,4 @@
-/* src/features/Narracao/Narracao.css */
 
-/* --- Configuração Global --- */
 .narracao-container {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
@@ -10,21 +8,19 @@
   color: #333;
 }
 
-/* --- Overlay de Loading (Progresso) --- */
 .loading-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6); /* Fundo escuro semi-transparente */
+  background-color: rgba(0, 0, 0, 0.6);
   z-index: 9998;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* --- Botões --- */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -89,7 +85,6 @@
   margin: 4px 0 0;
 }
 
-/* --- Layout Principal --- */
 .narracao-main {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -107,7 +102,6 @@
   gap: 16px;
 }
 
-/* --- Card Base --- */
 .card {
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
@@ -133,7 +127,6 @@
   gap: 8px;
 }
 
-/* --- Card: Interlocutores --- */
 .interlocutores-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -171,7 +164,6 @@
   gap: 4px;
 }
 
-/* --- Card: Diálogos / Falas --- */
 .falas-list {
   display: flex;
   flex-direction: column;
@@ -255,7 +247,6 @@
   pointer-events: none;
 }
 
-/* --- Card: Configurações (Direita) --- */
 .settings-item {
   display: flex;
   flex-direction: column;
@@ -288,7 +279,6 @@
   font-size: 16px;
   justify-content: center;
 }
-/* Estilo para o botão "Gerar" desabilitado */
 .btn-gerar:disabled {
   background-color: #888;
   cursor: not-allowed;
@@ -310,7 +300,6 @@
   color: #805ad5;
 }
 
-/* --- Status Bar DENTRO do Card --- */
 .card-status-bar {
   display: flex;
   flex-wrap: wrap;
@@ -332,7 +321,6 @@
   font-weight: 500;
 }
 
-/* --- Estilos do Card do Player --- */
 .player-card {
   background-color: #faf5ff;
   border: 1px solid #e9d5ff;
@@ -353,7 +341,6 @@
   color: #805ad5;
 }
 
-/* --- Estilos do Player Customizado --- */
 .hidden-audio-element {
   display: none;
 }
@@ -366,7 +353,7 @@
 .play-pause-btn {
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
-  border-radius: 6px; /* Quadrado arredondado */
+  border-radius: 6px; 
   width: 36px;
   height: 36px;
   display: flex;
@@ -420,7 +407,6 @@
   background-color: #333;
 }
 
-/* --- Estilos do Modal (Adicionar Interlocutor) --- */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -552,7 +538,6 @@
   justify-content: center;
 }
 
-/* --- Estilos do Modal de Progresso --- */
 .progress-modal-content {
   background-color: #ffffff;
   padding: 24px 32px;
@@ -592,7 +577,6 @@
   font-weight: 500;
 }
 
-/* --- Estilos do Toast --- */
 .toast-container {
   position: fixed;
   top: 80px;
@@ -613,11 +597,9 @@
 .toast-icon {
   flex-shrink: 0;
 }
-/* Cor preta para o ícone de sucesso (como na imagem) */
 .toast-container.toast-success .toast-icon {
   color: #1a1a1a;
 }
-/* Cor escura padrão para o ícone de aviso */
 .toast-container.toast-warning .toast-icon {
   color: #333;
 }

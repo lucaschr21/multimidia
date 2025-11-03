@@ -114,7 +114,6 @@ export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
       });
     }
   };
-  // --- FIM de handleGerarNarracao ---
 
 
   const { totalPalavras, totalCaracteres } = useMemo(() => {
@@ -131,13 +130,11 @@ export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
     return Math.round(baseDuration / velocidade);
   }, [totalCaracteres, velocidade]);
 
-  // --- CORRIGIDO: Agora depende de 'fala' (singular) ---
   useEffect(() => {
     setAudioUrl(null);
   }, [fala, interlocutores, velocidade]);
 
 
-  // --- FUNÇÕES DE INTERLOCUTORES ---
   const handleEditInterlocutor = (
     id: string,
     data: Omit<Interlocutor, 'id'>
@@ -196,7 +193,6 @@ export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
              <div className="card-header">
               <h2>Interlocutores e Vozes</h2>
             </div>
-            {/* Exibe o único interlocutor */}
             <div className="interlocutores-list">
               <div key={interlocutorUnico.id} className="interlocutor-item">
                 <span className="dot" style={{ backgroundColor: interlocutorUnico.cor }} />
@@ -220,10 +216,8 @@ export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
             <div className="card-header">
               <h2>Diálogos / Falas</h2>
               <div className="card-header-actions">
-                {/* Botões removidos */}
               </div>
             </div>
-            {/* Exibe a única fala */}
             <div className="falas-list">
               <div key={fala.id} className="fala-item">
                 <div className="fala-header">
@@ -243,7 +237,6 @@ export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
                   value={fala.texto}
                   onChange={(e) => {
                     const novoTexto = e.target.value;
-                    // Atualiza o estado da fala singular
                     setFala(falaAtual => ({ ...falaAtual, texto: novoTexto }));
                   }}
                   rows={3}
@@ -263,7 +256,6 @@ export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
             </footer>
           </section>
 
-          {/* CARD DO PLAYER DE ÁUDIO (REAL) */}
           {audioUrl && (
             <section className="card player-card">
               <div className="player-header">
@@ -289,7 +281,6 @@ export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
 
         </div>
 
-        {/* Coluna da Direita (Configurações Globais) */}
         <div className="narracao-col-right">
            <section className="card">
             <div className="card-header">

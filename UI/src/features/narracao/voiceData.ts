@@ -1,6 +1,3 @@
-// src/features/Narracao/voiceData.ts
-
-// Esta lista será usada no Dropdown (Modal)
 export const VOICE_LIST = [
   { value: "alloy", label: "🎙️ Alloy — Voz neutra, clara e equilibrada." },
   { value: "echo", label: "🎙️ Echo — Voz masculina suave e expressiva." },
@@ -10,7 +7,6 @@ export const VOICE_LIST = [
   { value: "shimmer", label: "🎙️ Shimmer — Voz feminina mais leve e alegre." },
 ];
 
-// Este "mapa" será usado para exibir o nome bonito na tela
 export const VOICE_MAP: { [key: string]: string } = {
   alloy: "Alloy (Neutra)",
   echo: "Echo (Masculina Suave)",

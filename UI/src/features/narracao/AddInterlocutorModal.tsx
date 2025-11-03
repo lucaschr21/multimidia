@@ -16,11 +16,9 @@ const PRESET_CORES = [
   "#6366F1",
 ];
 
-// --- Tipos das Props (onAdd foi REMOVIDO) ---
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // onAdd: (data: Omit<Interlocutor, 'id'>) => void; // Removido
   onEdit: (id: string, data: Omit<Interlocutor, "id">) => void;
   interlocutorExistente: Interlocutor | null;
 }
@@ -28,7 +26,6 @@ interface ModalProps {
 export const AddInterlocutorModal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
-  // onAdd, // Removido
   onEdit,
   interlocutorExistente,
 }) => {
@@ -36,7 +33,6 @@ export const AddInterlocutorModal: React.FC<ModalProps> = ({
   const [voz, setVoz] = useState(VOICE_LIST[0].value);
   const [cor, setCor] = useState(PRESET_CORES[2]);
 
-  // Como não há mais "Adicionar", isEditing será sempre true quando abrir
   const isEditing = !!interlocutorExistente;
 
   useEffect(() => {
@@ -45,7 +41,6 @@ export const AddInterlocutorModal: React.FC<ModalProps> = ({
       setVoz(interlocutorExistente.voz);
       setCor(interlocutorExistente.cor);
     }
-    // O 'else' (modo Adicionar) foi removido
   }, [isOpen, interlocutorExistente, isEditing]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -57,7 +52,6 @@ export const AddInterlocutorModal: React.FC<ModalProps> = ({
 
     const data = { nome, voz, cor };
 
-    // Como só podemos editar, removemos o 'else'
     if (isEditing) {
       onEdit(interlocutorExistente!.id, data);
     }
@@ -117,7 +111,6 @@ export const AddInterlocutorModal: React.FC<ModalProps> = ({
             </div>
           </div>
 
-          {/* Cor */}
           <div className="form-group">
             <label htmlFor="cor">Cor de Identificação</label>
             <div className="color-picker">
@@ -145,7 +138,6 @@ export const AddInterlocutorModal: React.FC<ModalProps> = ({
           </div>
 
           <div className="modal-footer">
-            {/* O botão agora é sempre "Salvar" */}
             <button type="submit" className="btn btn-primary btn-full">
               Salvar Alterações
             </button>
