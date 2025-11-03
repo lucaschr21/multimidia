@@ -14,12 +14,10 @@ import { Toast, type ToastData } from './toast';
 import { AudioPlayer } from './AudioPlayer'; 
 import { VOICE_MAP } from './voiceData';
 
-// --- Interface de Props ---
 interface NarracaoProps {
   onGoBack: () => void;
 }
 
-// --- DADOS INICIAIS ---
 const INITIAL_INTERLOCUTOR: Interlocutor = {
   id: 'id-narrador-unico',
   nome: 'Narrador',
@@ -32,7 +30,6 @@ const INITIAL_FALA: Fala = {
   interlocutorId: 'id-narrador-unico', 
   texto: 'Olá! Bem-vindo ao sistema de narração com múltiplas vozes.' 
 };
-// --- FIM DOS DADOS ---
 
 
 export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
@@ -52,7 +49,6 @@ export const Narracao: React.FC<NarracaoProps> = ({ onGoBack }) => {
 
   const interlocutorUnico = interlocutores[0];
 
-  // --- handleGerarNarracao ---
   const handleGerarNarracao = async () => {
     console.log('Iniciando geração...');
     setIsLoading(true);
