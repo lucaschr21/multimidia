@@ -12,7 +12,7 @@ A aplicação combina uma interface moderna em **React** com uma **API robusta e
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-009485?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Whisper](https://img.shields.io/badge/Whisper-black?logo=openai&logoColor=white)](https://openai.com/pt-BR/index/whisper/)
-[![Pyannote.audio](https://img.shields.io/badge/pyannote.audio-0b8f66?logo=huggingface&logoColor=white)](https://openai.com/pt-BR/index/whisper/)
+[![Pyannote.audio](https://img.shields.io/badge/pyannote.audio-0b8f66?logo=huggingface&logoColor=white)](https://www.pyannote.ai/blog/community-1)
 [![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?logo=ffmpeg&logoColor=white)](https://www.ffmpeg.org/)
 
 </div>
@@ -181,5 +181,6 @@ cd UI
 npm start
 npm run dev
 ```
+
 
 
